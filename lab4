@@ -66,4 +66,50 @@ FROM public.pudelka p JOIN public.zawartosc z USING(idpudelka)
 JOIN public.czekoladki c USING(idczekoladki)
 WHERE c.nadzienie IS NULL;
 
-
+-- 4.6 (baza danych: cukiernia) Napisz poniższe zapytania w języku SQL:
+-- 4.6.1 Wyświetl wartości kluczy głównych oraz nazwy czekoladek, których koszt jest większy od kosztu czekoladki o wartości klucza głównego równej d08
+SELECT idczekoladki, nazwa FROM public.czekoladki 
+WHERE koszt > (SELECT koszt FROM public.czekoladki WHERE idczekoladki = 'd08');
+-- 4.6.2 Kto (nazwa klienta) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiała Górka Alicja.
+WITH zamowilaAlicja AS (
+    SELECT a.idpudelka FROM
+    klienci k JOIN zamowienia z USING (idklienta)
+    JOIN artykuly a USING (idzamowienia)
+    WHERE k.nazwa = 'Górka Alicja'
+)
+SELECT k.nazwa FROM 
+klienci k JOIN zamowienia USING (idklienta)
+JOIN artykuly USING (idzamowienia)
+JOIN zamowilaAlicja USING (idpudelka)
+WHERE k.nazwa <> 'Górka Alicja'
+GROUP BY k.nazwa;
+-- inna interpretacja: Kto złożył zamówienia na dokładnie takie same pudełka
+SELECT k.nazwa FROM 
+klienci k JOIN zamowienia USING (idklienta)
+JOIN artykuly a USING (idzamowienia)
+WHERE k.nazwa <> 'Górka Alicja' AND a.idpudelka IN (
+    SELECT a.idpudelka FROM
+    klienci k JOIN zamowienia z USING (idklienta)
+    JOIN artykuly a USING (idzamowienia)
+    WHERE k.nazwa = 'Górka Alicja'
+)
+GROUP BY k.nazwa
+HAVING COUNT(*) = (
+    SELECT COUNT(*) FROM
+    klienci k JOIN zamowienia z USING (idklienta)
+    JOIN artykuly a USING (idzamowienia)
+    WHERE k.nazwa = 'Górka Alicja'
+);
+-- 4.6.3 Kto (nazwa klienta, adres) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiali klienci z Katowic
+WITH zamowieniaZKatowic AS (
+    SELECT a.idpudelka FROM
+    klienci k JOIN zamowienia z USING (idklienta)
+    JOIN artykuly a USING (idzamowienia)
+    WHERE k.miejscowosc = 'Katowice'
+)
+SELECT k.nazwa, CONCAT(k.ulica, ', ', k.kod, ' ' , k.miejscowosc) AS adres FROM 
+klienci k JOIN zamowienia USING (idklienta)
+JOIN artykuly USING (idzamowienia)
+JOIN zamowieniaZKatowic USING (idpudelka)
+WHERE k.miejscowosc <> 'Katowice'
+GROUP BY k.nazwa, k.ulica, k.kod, k.miejscowosc;
