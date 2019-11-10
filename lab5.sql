@@ -16,3 +16,35 @@ FROM public.zamowienia z JOIN public.klienci k USING(idklienta)
 GROUP BY k.miejscowosc
 ORDER BY k.miejscowosc;
 
+-- 5.6 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+-- 5.6.1 łącznej masy wszystkich pudełek czekoladek znajdujących się w cukierni
+SELECT SUM(cz.masa * z.sztuk * p.stan) AS masa FROM public.czekoladki cz 
+JOIN public.zawartosc z USING(idczekoladki) 
+JOIN public.pudelka p USING(idpudelka);
+-- 5.6.2 łącznej wartości wszystkich pudełek czekoladek znajdujących się w cukierni
+SELECT SUM(cena * stan) AS wartosc FROM public.pudelka;
+
+-- 5.7 (baza danych: cukiernia) Zakładając, że koszt wytworzenia pudełka czekoladek jest równy kosztowi wytworzenia zawartych w nim czekoladek, napisz zapytanie wyznaczające:
+-- 5.7.1 zysk ze sprzedaży jednej sztuki poszczególnych pudełek (różnica między ceną pudełka i kosztem jego wytworzenia)
+SELECT p.idpudelka, p.nazwa, p.cena - SUM(cz.koszt * z.sztuk) AS zysk FROM public.czekoladki cz 
+JOIN public.zawartosc z USING(idczekoladki) 
+JOIN public.pudelka p USING(idpudelka)
+GROUP BY p.idpudelka, p.nazwa
+ORDER BY zysk DESC;
+-- 5.7.2 zysk ze sprzedaży zamówionych pudełek
+WITH zysk AS (
+    SELECT p.idpudelka, p.nazwa, p.cena - SUM(cz.koszt * z.sztuk) AS zysk FROM public.czekoladki cz 
+    JOIN public.zawartosc z USING(idczekoladki) 
+    JOIN public.pudelka p USING(idpudelka)
+    GROUP BY p.idpudelka, p.nazwa
+) SELECT SUM(a.sztuk * z.zysk) AS "calkowity zysk" FROM public.artykuly a
+JOIN zysk z USING(idpudelka);
+-- 5.7.3 zysk ze sprzedaży wszystkich pudełek czekoladek w cukierni
+WITH zysk AS (
+    SELECT p.idpudelka, p.nazwa, p.cena - SUM(cz.koszt * z.sztuk) AS zysk FROM public.czekoladki cz 
+    JOIN public.zawartosc z USING(idczekoladki) 
+    JOIN public.pudelka p USING(idpudelka)
+    GROUP BY p.idpudelka, p.nazwa
+) SELECT SUM(p.stan * z.zysk) AS "calkowity zysk" FROM public.pudelka p
+JOIN zysk z USING(idpudelka);
+
