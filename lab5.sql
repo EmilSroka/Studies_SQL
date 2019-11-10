@@ -48,3 +48,8 @@ WITH zysk AS (
 ) SELECT SUM(p.stan * z.zysk) AS "calkowity zysk" FROM public.pudelka p
 JOIN zysk z USING(idpudelka);
 
+-- 5.8 (baza danych: cukiernia) Napisz zapytanie wyświetlające: liczbę porządkową i identyfikator pudełka czekoladek (idpudelka). 
+-- Identyfikatory pudełek mają być posortowane alfabetycznie, rosnąco. Liczba porządkowa jest z przedziału 1..N, gdzie N jest ilością pudełek.
+CREATE SEQUENCE lp START 1;
+SELECT NEXTVAL('lp') AS lp, idpudelka FROM public.pudelka ORDER BY idpudelka;
+DROP SEQUENCE lp;
