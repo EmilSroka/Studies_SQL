@@ -63,3 +63,11 @@ FROM public.czekoladki WHERE nazwa LIKE 'Slod%' OR nazwa LIKE 'Słod%';
 -- 3.2.10 składa się dokładnie z jednego słowa.
 SELECT idczekoladki, nazwa, czekolada, orzechy, nadzienie 
 FROM public.czekoladki WHERE POSITION(' ' IN nazwa) = 0;
+
+-- 3.3 (baza danych: cukiernia) Napisz zapytanie w języku SQL oparte na tabeli Klienci, które:
+-- 3.3.1 wyświetla nazwy miast, z których pochodzą klienci cukierni i które składają się z więcej niż jednego słowa,
+SELECT miejscowosc FROM public.klienci WHERE miejscowosc LIKE '_% %_';
+-- 3.3.2 wyświetla nazwy klientów, którzy podali numer stacjonarny telefonu,
+SELECT nazwa FROM public.klienci WHERE LENGTH(telefon) = 13;
+-- 3.3.3 wyświetla nazwy klientów, którzy podali numer komórkowy telefonu,
+SELECT nazwa FROM public.klienci WHERE LENGTH(telefon) = 11;
