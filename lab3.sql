@@ -104,3 +104,15 @@ EXCEPT (
     UNION
     SELECT idczekoladki, nazwa, masa, koszt FROM public.czekoladki WHERE koszt BETWEEN 0.29 AND 0.35
 );
+
+-- 3.5 (baza danych: cukiernia) Korzystając z operatorów UNION, INTERSECT, EXCEPT napisz zapytanie w języku SQL wyświetlające:
+-- 3.5.1 identyfikatory klientów, którzy nigdy nie złożyli żadnego zamówienia,
+SELECT idklienta FROM klienci EXCEPT SELECT DISTINCT idklienta FROM zamowienia;
+-- 3.5.2 identyfikatory pudełek, które nigdy nie zostały zamówione,
+SELECT idpudelka FROM pudelka EXCEPT SELECT DISTINCT idpudelka FROM artykuly;
+-- 3.5.3 nazwy klientów, czekoladek i pudełek, które zawierają rz (lub Rz),
+SELECT nazwa FROM klienci WHERE nazwa ILIKE '%rz%' UNION
+SELECT nazwa FROM czekoladki WHERE nazwa ILIKE '%rz%' UNION
+SELECT nazwa FROM pudelka WHERE nazwa ILIKE '%rz%';
+-- 3.5.4 identyfikatory czekoladek, które nie występują w żadnym pudełku.
+SELECT idczekoladki FROM czekoladki EXCEPT SELECT idczekoladki FROM zawartosc;
