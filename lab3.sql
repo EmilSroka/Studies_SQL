@@ -116,3 +116,50 @@ SELECT nazwa FROM czekoladki WHERE nazwa ILIKE '%rz%' UNION
 SELECT nazwa FROM pudelka WHERE nazwa ILIKE '%rz%';
 -- 3.5.4 identyfikatory czekoladek, które nie występują w żadnym pudełku.
 SELECT idczekoladki FROM czekoladki EXCEPT SELECT idczekoladki FROM zawartosc;
+
+-- 3.6 (baza danych: siatkówka) Napisz zapytanie w języku SQL wyświetlające:
+-- 3.6.1 identyfikator meczu, sumę punktów zdobytych przez gospodarzy i sumę punktów zdobytych przez gości,
+SELECT idmeczu,
+gospodarze[1] + gospodarze[2] + gospodarze[3] + COALESCE(gospodarze[4], 0) 
++ COALESCE(gospodarze[5], 0) AS punktyGospodarze,
+goscie[1] + goscie[2] + goscie[3] + COALESCE(goscie[4], 0) 
++ COALESCE(goscie[5], 0) AS punktyGoscie
+FROM siatkowka.statystyki;
+-- 3.6.2 identyfikator meczu, sumę punktów zdobytych przez gospodarzy i sumę punktów zdobytych przez gości,
+-- dla meczów, które skończyły się po 5 setach i zwycięzca ostatniego seta zdobył ponad 15 punktów,
+SELECT idmeczu,
+gospodarze[1] + gospodarze[2] + gospodarze[3] + gospodarze[4] + gospodarze[5] AS punktyGospodarze,
+goscie[1] + goscie[2] + goscie[3] + goscie[4] + goscie[5] AS punktyGoscie
+FROM siatkowka.statystyki 
+WHERE goscie[5] IS NOT NULL AND 
+(goscie[5] > 15 OR gospodarze[5] > 15);
+-- 3.6.3 identyfikator i wynik meczu w formacie x:y, np. 3:1 (wynik jest pojedynczą kolumną – napisem),
+SELECT idmeczu,
+CONCAT(
+    CASE WHEN gospodarze[1] > goscie[1] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[2] > goscie[2] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[3] > goscie[3] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[4] > goscie[4] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[5] > goscie[5] THEN 1 ELSE 0 END, 
+    ':',
+    CASE WHEN gospodarze[1] < goscie[1] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[2] < goscie[2] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[3] < goscie[3] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[4] < goscie[4] THEN 1 ELSE 0 END +
+    CASE WHEN gospodarze[5] < goscie[5] THEN 1 ELSE 0 END
+) AS wynik 
+FROM siatkowka.statystyki;
+-- 3.6.4 identyfikator meczu, sumę punktów zdobytych przez gospodarzy i sumę punktów zdobytych przez gości, 
+-- dla meczów, w których gospodarze zdobyli ponad 100 punktów,
+SELECT idmeczu,
+gospodarze[1] + gospodarze[2] + gospodarze[3] + gospodarze[4] + gospodarze[5] AS punktyGospodarze,
+goscie[1] + goscie[2] + goscie[3] + goscie[4] + goscie[5] AS punktyGoscie
+FROM siatkowka.statystyki 
+WHERE gospodarze[1] + gospodarze[2] + gospodarze[3] + gospodarze[4] + gospodarze[5] > 100;
+-- 3.6.5 identyfikator meczu, liczbę punktów zdobytych przez gospodarzy w pierwszym secie, sumę punktów zdobytych w meczu przez gospodarzy,
+-- dla meczów, w których pierwiastek kwadratowy z liczby punktów zdobytych w pierwszym secie jest mniejszy niż 
+-- logarytm o podstawie 2 z sumy punktów zdobytych w meczu. ;)
+SELECT idmeczu, gospodarze[1] AS punktyGospodarzyWPierwszymSecie,
+gospodarze[1] + gospodarze[2] + gospodarze[3] + gospodarze[4] + gospodarze[5] AS punktyGospodarzyWMeczu
+FROM siatkowka.statystyki 
+WHERE sqrt(gospodarze[1]) < log(2, gospodarze[1] + gospodarze[2] + gospodarze[3] + gospodarze[4] + gospodarze[5]);
