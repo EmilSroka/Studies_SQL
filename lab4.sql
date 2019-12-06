@@ -1,3 +1,56 @@
+-- 4.2 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat zamówień (data realizacji, idzamowienia), które:
+-- 4.2.1 zostały złożone przez klienta, który ma na imię Antoni,
+SELECT z.datarealizacji, z.idzamowienia
+FROM zamowienia	z JOIN klienci k USING(idklienta)
+WHERE k.nazwa LIKE '%_ Antoni';
+-- 4.2.2 zostały złożone przez klientów z mieszkań (zwróć uwagę na pole ulica),
+SELECT z.datarealizacji, z.idzamowienia
+FROM zamowienia	z JOIN klienci k USING(idklienta)
+WHERE k.ulica LIKE '%/%';
+-- 4.2.3 zostały złożone przez klienta z Krakowa do realizacji w listopadzie 2013 roku.
+SELECT z.datarealizacji, z.idzamowienia
+FROM zamowienia	z JOIN klienci k USING(idklienta)
+WHERE k.miejscowosc = 'Kraków' AND
+datarealizacji BETWEEN '2013-11-01' AND '2013-11-30';
+
+-- 4.3 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat klientów (nazwa, ulica, miejscowość), którzy:
+-- 4.3.1 złożyli zamówienia z datą realizacji nie starszą niż sprzed pięciu lat,
+SELECT k.nazwa, k.ulica, k.miejscowosc 
+FROM klienci k JOIN zamowienia z USING(idklienta)
+WHERE AGE(z.datarealizacji) < '5 years';
+-- 4.3.2 zamówili pudełko Kremowa fantazja lub Kolekcja jesienna,
+SELECT DISTINCT k.nazwa, k.ulica, k.miejscowosc
+FROM klienci k JOIN zamowienia z USING(idklienta)
+JOIN artykuly a USING(idzamowienia) 
+JOIN pudelka p USING(idpudelka)
+WHERE p.nazwa IN ('Kremowa fantazja', 'Kolekcja jesienna');
+-- 4.3.3 złożyli przynajmniej jedno zamówienie,
+SELECT DISTINCT k.nazwa, k.ulica, k.miejscowosc
+FROM klienci k JOIN zamowienia z USING(idklienta);
+-- 4.3.4 nie złożyli żadnych zamówień,
+SELECT DISTINCT k.nazwa, k.ulica, k.miejscowosc
+FROM klienci k LEFT JOIN zamowienia z USING(idklienta)
+WHERE z.idzamowienia IS NULL;
+-- 4.3.5 złożyli zamówienia z datą realizacji w listopadzie 2013,
+SELECT DISTINCT k.nazwa, k.ulica, k.miejscowosc
+FROM klienci k JOIN zamowienia z USING(idklienta)
+WHERE z.datarealizacji BETWEEN '2013-11-01' AND '2013-11-30';
+-- 4.3.6 zamówili co najmniej 2 sztuki pudełek Kremowa fantazja lub Kolekcja jesienna w ramach jednego zamówienia,
+SELECT DISTINCT k.nazwa, k.ulica, k.miejscowosc
+FROM klienci k JOIN zamowienia z USING(idklienta)
+JOIN artykuly a USING(idzamowienia) 
+JOIN pudelka p USING(idpudelka)
+WHERE p.nazwa IN ('Kremowa fantazja', 'Kolekcja jesienna') 
+AND a.sztuk > 1;
+-- 4.3.7 zamówili pudełka, które zawierają czekoladki z migdałami.
+SELECT DISTINCT k.nazwa, k.ulica, k.miejscowosc
+FROM klienci k JOIN zamowienia z USING(idklienta)
+JOIN artykuly a USING(idzamowienia) 
+JOIN pudelka p USING(idpudelka)
+JOIN zawartosc za USING(idpudelka)
+JOIN czekoladki c USING(idczekoladki)
+WHERE c.orzechy = 'migdały';
+
 -- 4.4 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat pudełek i ich zawartości (nazwa, opis, nazwa czekoladki, opis czekoladki):
 -- 4.4.1 wszystkich pudełek
 SELECT p.nazwa, p.opis, c.nazwa AS "nazwa czekoladki", c.opis AS "opis czekoladki"  
