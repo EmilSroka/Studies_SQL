@@ -1,3 +1,31 @@
+-- 5.1 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+-- 5.1.1 łącznej liczby czekoladek w bazie danych,
+SELECT COUNT(*) AS ilosc_czekoladek FROM czekoladki;
+-- 5.1.2 łącznej liczby czekoladek z nadzieniem (na 2 sposoby) - podpowiedź: count(*), count(nazwaKolumny),
+SELECT COUNT(*) AS ilosc_czekoladek FROM czekoladki
+WHERE nadzienie IS NOT NULL;
+-- OR
+SELECT COUNT(nadzienie) AS ilosc_czekoladek FROM czekoladki;
+-- 5.1.3 pudełka, w którym jest najwięcej czekoladek (uwaga: konieczne jest użycie LIMIT),
+SELECT idpudelka FROM pudelka p JOIN zawartosc z USING(idpudelka)
+GROUP BY idpudelka 
+ORDER BY SUM(z.sztuk) DESC LIMIT 1;
+-- 5.1.4 łącznej liczby czekoladek w poszczególnych pudełkach,
+SELECT idpudelka, SUM(z.sztuk) FROM pudelka p JOIN zawartosc z USING(idpudelka)
+GROUP BY idpudelka;
+-- 5.1.5 łącznej liczby czekoladek bez orzechów w poszczególnych pudełkach,
+SELECT idpudelka, SUM(z.sztuk) 
+FROM pudelka p JOIN zawartosc z USING(idpudelka)
+JOIN czekoladki c USING(idczekoladki)
+WHERE c.orzechy IS NULL
+GROUP BY idpudelka;
+-- 5.1.6 łącznej liczby czekoladek w mlecznej czekoladzie w poszczególnych pudełkach.
+SELECT idpudelka, SUM(z.sztuk) 
+FROM pudelka p JOIN zawartosc z USING(idpudelka)
+JOIN czekoladki c USING(idczekoladki)
+WHERE c.czekolada = 'mleczna'
+GROUP BY idpudelka;
+
 -- 5.5 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
 -- 5.5.1 liczby zamówień na poszczególne kwartały
 SELECT EXTRACT(YEAR FROM datarealizacji) AS rok, EXTRACT(QUARTER FROM datarealizacji) AS kwartal, COUNT(*) AS ile 
