@@ -26,6 +26,80 @@ JOIN czekoladki c USING(idczekoladki)
 WHERE c.czekolada = 'mleczna'
 GROUP BY idpudelka;
 
+-- 5.2 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+-- 5.2.1 masy poszczególnych pudełek,
+SELECT p.idpudelka, p.nazwa, SUM(c.masa * z.sztuk)
+FROM pudelka p JOIN zawartosc z USING(idpudelka)
+JOIN czekoladki c USING(idczekoladki)
+GROUP BY p.idpudelka, p.nazwa;
+-- 5.2.2 pudełka o największej masie,
+SELECT p.idpudelka, p.nazwa, SUM(c.masa * z.sztuk) AS masa
+FROM pudelka p JOIN zawartosc z USING(idpudelka)
+JOIN czekoladki c USING(idczekoladki)
+GROUP BY p.idpudelka, p.nazwa
+ORDER BY masa DESC LIMIT 1;
+-- 5.2.3 średniej masy pudełka w ofercie cukierni,
+SELECT AVG(m.masa) FROM 
+(
+    SELECT SUM(c.masa * z.sztuk) AS masa
+    FROM pudelka p JOIN zawartosc z USING(idpudelka)
+    JOIN czekoladki c USING(idczekoladki)
+    GROUP BY p.idpudelka, p.nazwa
+) m;
+-- OR średniej masy pudełka na stanie w cukierni,
+SELECT SUM(m.masa * p.stan)/SUM(p.stan) FROM 
+(
+    SELECT p.idpudelka AS idpudelka, SUM(c.masa * z.sztuk) AS masa
+    FROM pudelka p JOIN zawartosc z USING(idpudelka)
+    JOIN czekoladki c USING(idczekoladki)
+    GROUP BY p.idpudelka, p.nazwa
+) m JOIN pudelka p USING(idpudelka);
+-- 5.2.4 średniej wagi pojedynczej czekoladki w poszczególnych pudełkach,
+SELECT p.idpudelka, p.nazwa, SUM(c.masa * z.sztuk)/SUM(z.sztuk) AS masa
+FROM pudelka p JOIN zawartosc z USING(idpudelka)
+JOIN czekoladki c USING(idczekoladki)
+GROUP BY p.idpudelka, p.nazwa;
+
+-- 5.3 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+-- 5.3.1 liczby zamówień na poszczególne dni,
+SELECT datarealizacji, COUNT(*) FROM zamowienia GROUP BY datarealizacji;
+-- 5.3.2 łącznej liczby wszystkich zamówień,
+SELECT COUNT(*) FROM zamowienia;
+-- 5.3.3 łącznej wartości wszystkich zamówień,
+SELECT SUM(a.sztuk * p.cena)
+FROM artykuly a JOIN pudelka p USING(idpudelka);
+-- 5.3.4 klientów, liczby złożonych przez nich zamówień i łącznej wartości złożonych przez nich zamówień.
+SELECT k.idklienta, SUM(a.sztuk * p.cena), COUNT(z.idzamowienia)
+FROM klienci k JOIN zamowienia z USING(idklienta)
+JOIN artykuly a USING(idzamowienia) 
+JOIN pudelka p USING(idpudelka)
+GROUP BY k.idklienta;
+
+-- 5.4 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+-- 5.4.1 czekoladki, która występuje w największej liczbie pudełek,
+SELECT c.idczekoladki, COUNT(*)
+FROM zawartosc z JOIN czekoladki c USING(idczekoladki)
+GROUP BY c.idczekoladki
+ORDER BY COUNT(*) DESC LIMIT 1;
+-- 5.4.2 pudełka, które zawiera najwięcej czekoladek bez orzechów,
+SELECT p.idpudelka, SUM(z.sztuk)
+FROM  pudelka p JOIN zawartosc z USING(idpudelka) 
+JOIN czekoladki c USING(idczekoladki)
+WHERE c.orzechy IS NULL
+GROUP BY p.idpudelka
+ORDER BY SUM(z.sztuk) DESC;
+-- 5.4.3 czekoladki, która występuje w najmniejszej liczbie pudełek,
+SELECT c.idczekoladki, COUNT(*)
+FROM zawartosc z JOIN czekoladki c USING(idczekoladki)
+GROUP BY c.idczekoladki
+ORDER BY COUNT(*) ASC LIMIT 1;
+-- 5.4.4 pudełka, które jest najczęściej zamawiane przez klientów.
+SELECT p.idpudelka, COUNT(*)
+FROM zamowienia z JOIN artykuly a USING(idzamowienia)
+JOIN pudelka p USING(idpudelka)
+GROUP BY p.idpudelka
+ORDER BY COUNT(*) DESC LIMIT 1;
+
 -- 5.5 (baza danych: cukiernia) Napisz zapytanie w języku SQL wyświetlające informacje na temat:
 -- 5.5.1 liczby zamówień na poszczególne kwartały
 SELECT EXTRACT(YEAR FROM datarealizacji) AS rok, EXTRACT(QUARTER FROM datarealizacji) AS kwartal, COUNT(*) AS ile 
