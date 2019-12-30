@@ -1,8 +1,8 @@
 begin;
 
-CREATE SCHEMA cukiernia;
+CREATE SCHEMA kwiaciarnia;
 
-CREATE TABLE cukiernia.klienci (
+CREATE TABLE kwiaciarnia.klienci (
     idklienta         varchar(10) PRIMARY KEY,
     haslo             varchar(10) CHECK(LENGTH(haslo) > 3) NOT NULL,
     nazwa             varchar(40) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE cukiernia.klienci (
     regon             char(9)
 );
 
-CREATE TABLE cukiernia.kompozycje (
+CREATE TABLE kwiaciarnia.kompozycje (
     idkompozycji         char(5) PRIMARY KEY,
     nazwa                varchar(40) NOT NULL,
     opis                 varchar(100),
@@ -25,7 +25,7 @@ CREATE TABLE cukiernia.kompozycje (
     stan                 int
 );
 
-CREATE TABLE cukiernia.odbiorcy (
+CREATE TABLE kwiaciarnia.odbiorcy (
     idodbiorcy         serial PRIMARY KEY,
     nazwa              varchar(40) NOT NULL,
     miasto             varchar(40) NOT NULL,
@@ -33,18 +33,18 @@ CREATE TABLE cukiernia.odbiorcy (
     adres              varchar(40) NOT NULL
 );
 
-CREATE TABLE cukiernia.zamowienia (
+CREATE TABLE kwiaciarnia.zamowienia (
     idzamowienia                   int PRIMARY KEY,
-    idklienta                      varchar(10) NOT NULL REFERENCES cukiernia.klienci,
-    idodbiorcy                     int NOT NULL REFERENCES cukiernia.odbiorcy,
-    idkompozycji                   char(5) NOT NULL REFERENCES cukiernia.kompozycje,
+    idklienta                      varchar(10) NOT NULL REFERENCES kwiaciarnia.klienci,
+    idodbiorcy                     int NOT NULL REFERENCES kwiaciarnia.odbiorcy,
+    idkompozycji                   char(5) NOT NULL REFERENCES kwiaciarnia.kompozycje,
     termin                         date NOT NULL,
     cena                           numeric(7,2),
     zaplacone                      boolean,
     uwagi                          varchar(200)
 );
 
-CREATE TABLE cukiernia.historia (
+CREATE TABLE kwiaciarnia.historia (
     idzamowienia                   int PRIMARY KEY,
     idklienta                      varchar(10),
     idkompozycji                   char(5),
@@ -52,8 +52,8 @@ CREATE TABLE cukiernia.historia (
     termin                         date
 );
 
-CREATE TABLE cukiernia.zapotrzebowanie (
-    idkompozycji                   char(5) PRIMARY KEY REFERENCES cukiernia.kompozycje,
+CREATE TABLE kwiaciarnia.zapotrzebowanie (
+    idkompozycji                   char(5) PRIMARY KEY REFERENCES kwiaciarnia.kompozycje,
     data                           date
 );
 
