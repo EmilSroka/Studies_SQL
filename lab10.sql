@@ -115,3 +115,56 @@ WHERE idpudelka IN (
   JOIN czekoladki USING(idczekoladki)
   WHERE nadzienie IS NULL 
 );
+
+-- 10.5 (baza danych: cukiernia) Napisz poniższe zapytania w języku SQL 
+-- (używając odpowiedniego operatora, np. in/not in/exists/any/all):
+-- 10.5.1 Wyświetl wartości kluczy głównych oraz nazwy czekoladek, 
+-- których koszt jest większy od czekoladki o wartości klucza głównego równej D08.
+SELECT idczekoladki, nazwa FROM czekoladki 
+WHERE koszt > (SELECT koszt FROM czekoladki WHERE idczekoladki = 'd08');
+-- 10.5.2 Kto (nazwa klienta) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiała Gorka Alicja.
+SELECT DISTINCT nazwa FROM klienci 
+JOIN zamowienia USING(idklienta) 
+JOIN artykuly USING(idzamowienia) 
+WHERE idpudelka IN (
+  SELECT idpudelka FROM artykuly
+  JOIN zamowienia USING(idzamowienia)
+  JOIN klienci USING(idklienta)
+  WHERE nazwa = 'Górka Alicja'
+) AND nazwa <> 'Górka Alicja';
+-- 10.5.3 Kto (nazwa klienta, adres) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiali klienci z Katowic.
+SELECT DISTINCT nazwa, miejscowosc FROM klienci 
+JOIN zamowienia USING(idklienta) 
+JOIN artykuly USING(idzamowienia) 
+WHERE idpudelka IN (
+  SELECT idpudelka FROM artykuly
+  JOIN zamowienia USING(idzamowienia)
+  JOIN klienci USING(idklienta)
+  WHERE miejscowosc = 'Katowice'
+) AND miejscowosc <> 'Katowice';
+
+-- 10.6 (baza danych: cukiernia) Wyświetl nazwę pudełka oraz ilość czekoladek, dla:
+-- 10.6.1 pudełka o największej liczbie czekoladek (bez użycia klauzuli limit),
+SELECT nazwa, sum(sztuk) AS ile_czekoladek FROM pudelka 
+JOIN zawartosc USING(idpudelka)
+GROUP BY nazwa 
+HAVING sum(sztuk) >= ALL (SELECT sum(sztuk) FROM zawartosc GROUP BY idpudelka);
+-- 10.6.2 pudełka o najmniejszej liczbie czekoladek (bez użycia klauzuli limit),
+SELECT nazwa, sum(sztuk) AS ile_czekoladek FROM pudelka 
+JOIN zawartosc USING(idpudelka)
+GROUP BY nazwa 
+HAVING sum(sztuk) <= ALL (SELECT sum(sztuk) FROM zawartosc GROUP BY idpudelka);
+-- 10.6.3 pudełka, w którym liczba czekoladek jest powyżej średniej,
+WITH sums AS (
+  SELECT sum(sztuk) AS ile_czekoladek FROM zawartosc GROUP BY idpudelka
+) 
+SELECT nazwa, sum(sztuk) AS ile_czekoladek 
+FROM pudelka JOIN zawartosc USING(idpudelka)
+GROUP BY nazwa
+HAVING sum(sztuk) > (SELECT AVG(ile_czekoladek) FROM sums);
+-- 10.6.4 udełka o największej lub najmniejszej liczbie czekoladek.
+SELECT nazwa, sum(sztuk) AS ile_czekoladek FROM pudelka 
+JOIN zawartosc USING(idpudelka)
+GROUP BY nazwa 
+HAVING sum(sztuk) <= ALL (SELECT sum(sztuk) FROM zawartosc GROUP BY idpudelka)
+OR sum(sztuk) >= ALL (SELECT sum(sztuk) FROM zawartosc GROUP BY idpudelka);
