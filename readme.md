@@ -13,3 +13,4 @@ Labs thematic scope:
 8. Database normalization
 9. Database creation, transactions, CREATE, ALTER TABLE, INSERT INTO
 10. Subqueries, IN, EXISTS, ANY, ALL
+11. Functions, PLpgSQL
