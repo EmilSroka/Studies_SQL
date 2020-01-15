@@ -54,3 +54,79 @@ $$ LANGUAGE PLpgSQL
 SELECT sum(sztuk * zysk(idpudelka)) 
 FROM public.zamowienia JOIN public.artykuly USING(idzamowienia)
 WHERE datarealizacji = '2013-10-30'; 
+
+-- 11.3 (baza danych: cukiernia)
+-- 11.3.1 Napisz funkcję sumaZamowien obliczającą łączną wartość zamówień złożonych przez klienta, 
+-- które czekają na realizację (są w tabeli Zamowienia). Funkcja jako argument przyjmuje identyfikator klienta. 
+CREATE OR REPLACE FUNCTION sumaZamowien(id integer)
+RETURNS numeric(7,2) AS
+$$
+DECLARE
+	sum numeric(7,2);
+BEGIN
+	SELECT SUM(sztuk * cena) INTO sum 
+	FROM zamowienia JOIN artykuly USING(idzamowienia)
+	JOIN pudelka USING(idpudelka)
+	WHERE idklienta = id;
+
+	RETURN sum;
+END
+$$ LANGUAGE PLpgSQL
+-- 11.3.2 Napisz funkcję rabat obliczającą rabat jaki otrzymuje klient składający zamówienie. 
+-- Funkcja jako argument przyjmuje identyfikator klienta. 
+-- Rabat wyliczany jest na podstawie wcześniej złożonych zamówień w sposób następujący:
+-- * 4 % jeśli wartość zamówień jest z przedziału 101-200 zł;
+-- * 7 % jeśli wartość zamówień jest z przedziału 201-400 zł;
+-- * 8 % jeśli wartość zamówień jest większa od 400 zł.
+CREATE OR REPLACE FUNCTION rabat(id integer)
+RETURNS integer AS 
+$$
+DECLARE
+	discount integer;
+	previousValue numeric(7,2); 
+BEGIN
+	SELECT sumaZamowien(id) INTO previousValue;
+
+	SELECT CASE 
+		WHEN previousValue BETWEEN 101 AND 200 THEN 4 -- co z np. 200.50 ? 
+		WHEN previousValue BETWEEN 201 AND 400 THEN 7
+		WHEN previousValue > 400 THEN 8
+		ELSE 0
+	END
+	INTO discount;
+
+	RETURN discount;
+END
+$$ LANGUAGE PLpgSQL
+
+-- 11.4 (baza danych: cukiernia) Napisz bezargumentową funkcję podwyzka, która dokonuje podwyżki kosztów produkcji czekoladek o:
+-- * 3 gr dla czekoladek, których koszt produkcji jest mniejszy od 20 gr;
+-- * 4 gr dla czekoladek, których koszt produkcji jest z przedziału 20-29 gr;
+-- * 5 gr dla pozostałych.
+-- Funkcja powinna ponadto podnieść cenę pudełek o tyle o ile zmienił się koszt produkcji zawartych w nich czekoladek.
+CREATE OR REPLACE FUNCTION podwyzka()
+RETURNS void AS
+$$
+DECLARE 
+	czekoladka record;
+	contains record;
+	rise numeric(7,2);
+BEGIN
+	FOR czekoladka IN SELECT * FROM czekoladki LOOP 
+		rise := CASE 
+			WHEN czekoladka.koszt < 0.2 THEN 0.03
+			WHEN czekoladka.koszt BETWEEN 0.2 AND 0.29 THEN 0.04
+			ELSE 0.05
+		END;
+
+		UPDATE czekoladki SET koszt = koszt + rise
+		WHERE idczekoladki = czekoladka.idczekoladki;
+
+		FOR contains IN SELECT * FROM zawartosc WHERE idczekoladki = czekoladka.idczekoladki LOOP
+			
+			UPDATE pudelka SET cena = cena + contains.sztuk * rise WHERE idpudelka = contains.idpudelka;
+
+		END LOOP; 
+	END LOOP;
+END
+$$ LANGUAGE PLpgSQL
