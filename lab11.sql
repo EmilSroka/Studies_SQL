@@ -88,7 +88,7 @@ BEGIN
 	SELECT sumaZamowien(id) INTO previousValue;
 
 	SELECT CASE 
-		WHEN previousValue BETWEEN 101 AND 200 THEN 4 -- co z np. 200.50 ? 
+		WHEN previousValue BETWEEN 101 AND 200 THEN 4
 		WHEN previousValue BETWEEN 201 AND 400 THEN 7
 		WHEN previousValue > 400 THEN 8
 		ELSE 0
@@ -193,5 +193,41 @@ BEGIN
 
 		RETURN NEXT;
 	END LOOP;
+END
+$$ LANGUAGE PLpgSQL
+
+-- 11.7 (baza danych: kwiaciarnia) Napisz funkcję rabat obliczającą rabat jaki otrzymuje klient kwiaciarni składający zamówienie. 
+-- Funkcję utwórz w schemacie kwiaciarnia. Rabat wyliczany jest na podstawie zamówień bieżących (tabela zamowienia) 
+-- i z ostatnich siedmiu dni (tabela historia) w sposób następujący:
+-- * 5 % jeśli wartość zamówień jest większa od 0 lecz nie większa od 100 zł;
+-- * 10 % jeśli wartość zamówień jest z przedziału 101-400 zł;
+-- * 15 % jeśli wartość zamówień jest z przedziału 401-700 zł;
+-- * 20 % jeśli wartość zamówień jest większa od 700 zł.
+CREATE OR REPLACE FUNCTION kwiaciarnia.rabat(id varchar(10))
+RETURNS integer AS 
+$$
+DECLARE 
+	current numeric(7,2);
+	last7days numeric(7,2);
+	total numeric(7,2);
+	discount integer;
+BEGIN
+	SELECT SUM(cena) INTO current FROM kwiaciarnia.zamowienia 
+	WHERE idklienta = id;
+
+	SELECT SUM(cena) INTO last7days FROM kwiaciarnia.historia
+	WHERE idklienta = id AND AGE(termin) < '7 days';
+
+	total := COALESCE(current,0) + COALESCE(last7days,0);
+
+	discount := CASE 
+		WHEN total > 0 AND total <= 100 THEN 5
+		WHEN total BETWEEN 101 AND 400 THEN 10
+		WHEN total BETWEEN 401 AND 700 THEN 15
+		WHEN total > 700 THEN 20
+		ELSE 0
+	END;
+
+	RETURN discount;
 END
 $$ LANGUAGE PLpgSQL
