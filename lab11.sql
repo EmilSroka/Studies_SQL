@@ -130,3 +130,68 @@ BEGIN
 	END LOOP;
 END
 $$ LANGUAGE PLpgSQL
+
+-- 11.5 (baza danych: cukiernia) Napisz funkcję obnizka odwracająca zmiany wprowadzone w poprzedniej funkcji.
+CREATE OR REPLACE FUNCTION obnizka()
+RETURNS void AS 
+$$
+DECLARE 
+	chocolate record;
+	contains record;
+	decrease numeric(7,2);
+BEGIN
+	FOR chocolate IN SELECT * FROM czekoladki LOOP
+		decrease := CASE 
+			WHEN chocolate.koszt < 0.03 THEN 0
+			WHEN chocolate.koszt BETWEEN 0.03 AND 0.23 THEN 0.03
+			WHEN chocolate.koszt BETWEEN 0.24 AND 0.33 THEN 0.04
+			ELSE 0.05
+		END;
+
+		UPDATE czekoladki SET koszt = koszt - decrease WHERE idczekoladki = chocolate.idczekoladki;
+
+		FOR contains IN SELECT * FROM zawartosc WHERE idczekoladki = chocolate.idczekoladki LOOP 
+
+			UPDATE pudelka SET cena = cena - contains.sztuk * decrease WHERE idpudelka = contains.idpudelka;
+
+		END LOOP;
+	END LOOP;
+END
+$$ LANGUAGE PLpgSQL
+
+-- 11.6 (baza danych: cukiernia)
+-- 11.6.1 Napisz funkcję zwracającą informacje o zamówieniach złożonych przez klienta, 
+-- którego identyfikator podawany jest jako argument wywołania funkcji. 
+-- W/w informacje muszą zawierać: idzamowienia, idpudelka, datarealizacji.
+CREATE OR REPLACE FUNCTION info(id integer)
+RETURNS table(
+	r_idzamowienia integer,
+	r_idpudelka char(4),
+	r_datarealizacji date
+) AS 
+$$
+BEGIN
+	RETURN QUERY SELECT idzamowienia, idpudelka, datarealizacji
+	FROM zamowienia JOIN artykuly USING(idzamowienia)
+	WHERE idklienta = id;
+END 
+$$ LANGUAGE PLpgSQL
+-- 11.6.2 Napisz funkcję zwracającą listę klientów z miejscowości, której nazwa podawana jest jako argument wywołania funkcji. 
+-- Lista powinna zawierać: nazwę klienta i adres.
+CREATE OR REPLACE FUNCTION klienci_z(town varchar(15))
+RETURNS table(
+	r_nazwa varchar(130),
+	r_adres varchar(51)
+) AS 
+$$
+DECLARE 
+	client record; 
+BEGIN
+	FOR client IN SELECT * FROM klienci WHERE miejscowosc = town LOOP
+		r_nazwa := client.nazwa;
+		r_adres := CONCAT( client.ulica, E'\n', client.kod, ' ', client.miejscowosc );
+
+		RETURN NEXT;
+	END LOOP;
+END
+$$ LANGUAGE PLpgSQL
